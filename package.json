@@ -1,0 +1,14 @@
+{
+  "name": "com.erico.gradient-fog",
+  "version": "0.0.1",
+  "displayName": "Gradient Fog",
+  "unity": "6000.0",
+  "documentationUrl": "https://github.com/EricJRico/GradientFog.git#",
+  "keywords": ["Gradient Fog", "Unity Fog", "Fog"],
+  "description": "This is an updated version of the GradientFog RenderFeature based UniversalRenderingExamples GradientFog from 2020.",
+  "author": {
+    "name": "Eric Rico",
+    "email": "eric.j.rico@gmail.com",
+    "url": "https://www.linkedin.com/in/ericrico/"
+  }
+}

@@ -1,4 +1,4 @@
-# GradientFog
+# GradientFog (WIP)
 This is an updated version of the GradientFog RenderFeature based [UniversalRenderingExamples GradientFog](https://github.com/Unity-Technologies/UniversalRenderingExamples/wiki/Gradient-Fog) from 2020.
 
 # Overview

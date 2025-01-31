@@ -5,6 +5,21 @@ using UnityEngine.Rendering.RenderGraphModule;
 
 public class GradientFog : ScriptableRendererFeature
 {
+    [System.Serializable]
+    public class GradientFogSettings
+    {
+        // Needed requirements for the pass
+        public ScriptableRenderPassInput requirements =
+            ScriptableRenderPassInput.Color | ScriptableRenderPassInput.Depth;
+
+        public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingTransparents;
+        public float startDistance;
+        public float endDistance = 100;
+        public Color nearColor = new(0, 0.2f, 0.35f, 1);
+        public Color middleColor = new(0.62f, 0.86f, 1, 1);
+        public Color farColor = new(0.85f, 0.96f, 1, 1);
+    }
+
     GradientFogPass _gradientFogPass;
     [SerializeField] GradientFogSettings settings = new();
     private static MaterialPropertyBlock _sharedPropertyBlock = null;
@@ -49,30 +64,6 @@ public class GradientFog : ScriptableRendererFeature
             _settings = settings;
         }
 
-        private static void ExecuteCopyColorPass(RasterCommandBuffer cmd)
-        {
-            //Blitter.BlitTexture(cmd, sourceTexture, new Vector4(1, 1, 0, 0), 0.0f, false);
-            cmd.DrawProcedural(Matrix4x4.identity, FrameBufferFetchMaterial, 1, MeshTopology.Triangles, 3, 1, null);
-        }
-
-        private static void ExecuteMainPass(RasterCommandBuffer cmd, Material material, RTHandle copiedColor)
-        {
-            _sharedPropertyBlock.Clear();
-            if (copiedColor != null)
-                _sharedPropertyBlock.SetTexture(BlitTextureID, copiedColor);
-
-            // We need to set the "_BlitScaleBias" uniform for user materials with shaders relying on core Blit.hlsl to work
-            _sharedPropertyBlock.SetVector(BlitScaleBiasID, new Vector4(1, 1, 0, 0));
-
-            cmd.DrawProcedural(Matrix4x4.identity, material, 0, MeshTopology.Triangles, 3, 1, _sharedPropertyBlock);
-        }
-
-        private class PassData
-        {
-            internal Material Material;
-            internal TextureHandle Source;
-        }
-
         // RecordRenderGraph is where the RenderGraph handle can be accessed, through which render passes can be added to the graph.
         // FrameData is a context container through which URP resources can be accessed and managed.
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -105,7 +96,6 @@ public class GradientFog : ScriptableRendererFeature
                 passData.Source = resourceData.activeColorTexture;
 
                 // Setting input texture to sample
-                //builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 builder.SetInputAttachment(resourceData.activeColorTexture, 0);
                 // Setting output attachment
                 builder.SetRenderAttachment(copiedColorTexture, 0, AccessFlags.Write);
@@ -128,7 +118,6 @@ public class GradientFog : ScriptableRendererFeature
                 passData.Material = FogMaterial;
 
                 // Setting input texture to sample
-                //builder.UseTexture(copiedColorTexture, AccessFlags.Read);
                 builder.SetInputAttachment(copiedColorTexture, 0);
                 // Setting output attachment
                 builder.SetRenderAttachment(resourceData.activeColorTexture, 0, AccessFlags.Write);
@@ -140,20 +129,28 @@ public class GradientFog : ScriptableRendererFeature
                 });
             }
         }
-    }
 
-    [System.Serializable]
-    public class GradientFogSettings
-    {
-        // Needed requirements for the pass
-        public ScriptableRenderPassInput requirements =
-            ScriptableRenderPassInput.Color | ScriptableRenderPassInput.Depth;
+        private class PassData
+        {
+            internal Material Material;
+            internal TextureHandle Source;
+        }
 
-        public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingTransparents;
-        public float startDistance;
-        public float endDistance = 50;
-        public Color nearColor = new (0, 0.2f, 0.35f, 1);
-        public Color middleColor = new (0.62f, 0.86f, 1, 1);
-        public Color farColor = new (0.85f, 0.96f, 1, 1);
+        private static void ExecuteCopyColorPass(RasterCommandBuffer cmd)
+        {
+            cmd.DrawProcedural(Matrix4x4.identity, FrameBufferFetchMaterial, 1, MeshTopology.Triangles, 3, 1, null);
+        }
+
+        private static void ExecuteMainPass(RasterCommandBuffer cmd, Material material, RTHandle copiedColor)
+        {
+            _sharedPropertyBlock.Clear();
+            if (copiedColor != null)
+                _sharedPropertyBlock.SetTexture(BlitTextureID, copiedColor);
+
+            // We need to set the "_BlitScaleBias" uniform for user materials with shaders relying on core Blit.hlsl to work
+            _sharedPropertyBlock.SetVector(BlitScaleBiasID, new Vector4(1, 1, 0, 0));
+
+            cmd.DrawProcedural(Matrix4x4.identity, material, 0, MeshTopology.Triangles, 3, 1, _sharedPropertyBlock);
+        }
     }
 }
